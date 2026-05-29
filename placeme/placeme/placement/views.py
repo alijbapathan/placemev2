@@ -33,7 +33,7 @@ class DriveViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DriveSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'company']
+    filterset_fields = ['is_active', 'company']
     search_fields = ['position', 'company__name']
     ordering_fields = ['deadline', 'created_at']
     ordering = ['-created_at']

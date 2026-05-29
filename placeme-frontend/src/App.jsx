@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useAuthStore } from './context/authContext'
 
 // Pages
 import Home from './pages/Home'
@@ -24,7 +23,9 @@ import PrivateRoute from './components/PrivateRoute'
 import { MainLayout } from './layouts/MainLayout'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  // Check localStorage directly for login status
+  // Auth store might not be hydrated on first load
+  const hasToken = localStorage.getItem('access_token')
 
   return (
     <Router>
@@ -32,8 +33,8 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
+          <Route path="/login" element={hasToken ? <Navigate to="/dashboard" /> : <Login />} />
+          <Route path="/register" element={hasToken ? <Navigate to="/dashboard" /> : <Register />} />
 
           {/* Protected Routes with MainLayout */}
           <Route element={<PrivateRoute />}>

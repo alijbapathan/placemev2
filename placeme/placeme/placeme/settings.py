@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'placement',
     'training',
     'notifications',
+    'django_filters',
 ]
 
 MIDDLEWARE = [

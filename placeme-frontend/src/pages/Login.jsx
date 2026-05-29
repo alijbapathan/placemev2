@@ -2,13 +2,12 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuthStore } from '../context/authContext'
-import { authService } from '../services/api'
+import { auth } from '../services/apiClient'
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 
 const Login = () => {
   const navigate = useNavigate()
   const { login } = useAuthStore()
-  const setAuthToken = useAuthStore(state => state.setToken)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
@@ -25,27 +24,22 @@ const Login = () => {
     setLoading(true)
 
     try {
-      // First, get the token
-      const tokenRes = await authService.login(formData.username, formData.password)
+      // Login to get tokens
+      const tokenRes = await auth.login(formData.username, formData.password)
       const { access, refresh } = tokenRes.data
 
-      // Store token in zustand store - this sets it globally
-      setAuthToken(access)
-      useAuthStore.setState({ token: access, refreshToken: refresh })
+      // Store tokens in localStorage for persistence across page reloads
+      localStorage.setItem('access_token', access)
+      localStorage.setItem('refresh_token', refresh)
 
-      // Small delay to ensure token is set in interceptor
-      await new Promise(resolve => setTimeout(resolve, 50))
+      // Store in auth store
+      login({ username: formData.username }, access, refresh)
 
-      // Now get user data with the token
-      const userRes = await authService.getMe()
-      
-      // Store everything in auth store
-      login(userRes.data, access, refresh)
       toast.success('Login successful!')
       navigate('/dashboard')
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message)
-      const errorMsg = error.response?.data?.detail || error.response?.data?.message || 'Login failed'
+      const errorMsg = error.response?.data?.detail || 'Invalid username or password'
       toast.error(errorMsg)
     } finally {
       setLoading(false)

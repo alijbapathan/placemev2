@@ -61,8 +61,8 @@ class InterviewExperienceViewSet(viewsets.ModelViewSet):
     """ViewSet for InterviewExperience model"""
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['difficulty', 'company_name', 'interview_result']
-    search_fields = ['company_name', 'position', 'tips_and_insights']
+    filterset_fields = ['difficulty', 'result']
+    search_fields = ['company', 'position', 'tips']
     ordering_fields = ['upvotes', 'created_at']
     ordering = ['-upvotes', '-created_at']
 

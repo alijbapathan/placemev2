@@ -5,14 +5,74 @@ import { StatCard } from '../components/StatCard'
 import { DashboardCard } from '../components/DashboardCard'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
-import { STATS, UPCOMING_DRIVES, NOTIFICATIONS, ACTIVITY_TIMELINE, AI_SUGGESTIONS, MOCK_TESTS } from '../constants/dummyData'
+import { auth, placement, training } from '../services/apiClient'
+import { UPCOMING_DRIVES, NOTIFICATIONS, ACTIVITY_TIMELINE, AI_SUGGESTIONS, MOCK_TESTS } from '../constants/dummyData'
 
 export const StudentDashboard = () => {
   const [animateCounters, setAnimateCounters] = useState(false)
+  const [user, setUser] = useState(null)
+  const [stats, setStats] = useState({
+    appliedDrives: 0,
+    upcomingDrives: 0,
+    resumeScore: 0,
+    testsCompleted: 0
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    fetchDashboardData()
     setAnimateCounters(true)
   }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch user profile
+      try {
+        const userRes = await auth.getProfile()
+        console.log('User profile:', userRes.data)
+        setUser(userRes.data)
+      } catch (err) {
+        console.error('Error fetching user profile:', err)
+      }
+
+      // Fetch applications count
+      try {
+        const appsRes = await placement.getMyApplications({ page_size: 1 })
+        const appliedCount = appsRes.data?.count || 0
+        console.log('Applications count:', appliedCount)
+        setStats(prev => ({ ...prev, appliedDrives: appliedCount }))
+      } catch (err) {
+        console.error('Error fetching applications:', err)
+      }
+
+      // Fetch upcoming drives
+      try {
+        const drivesRes = await placement.getDrives({ is_active: true })
+        const drivesData = Array.isArray(drivesRes.data) ? drivesRes.data : drivesRes.data?.results || []
+        const upcomingCount = drivesData.length
+        console.log('Upcoming drives count:', upcomingCount)
+        setStats(prev => ({ ...prev, upcomingDrives: upcomingCount }))
+      } catch (err) {
+        console.error('Error fetching drives:', err)
+      }
+
+      // Fetch tests completed
+      try {
+        const testsRes = await training.getMyAttempts({ page_size: 1 })
+        const testsCount = testsRes.data?.count || 0
+        console.log('Tests completed count:', testsCount)
+        setStats(prev => ({ ...prev, testsCompleted: testsCount }))
+      } catch (err) {
+        console.error('Error fetching tests:', err)
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,6 +90,20 @@ export const StudentDashboard = () => {
     show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
   }
 
+  const userName = user?.first_name || user?.username || 'Student'
+
+  // Show loading spinner while fetching data
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -38,7 +112,7 @@ export const StudentDashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome back, Rahul 👋</h1>
+        <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome back, {userName} 👋</h1>
         <p className="text-slate-600">Here's your recruitment dashboard snapshot</p>
       </motion.div>
 
@@ -53,7 +127,7 @@ export const StudentDashboard = () => {
           <StatCard
             icon={Icons.Briefcase}
             label="Applied Drives"
-            value={STATS.appliedDrives}
+            value={stats.appliedDrives}
             trend={15}
             color="blue"
           />
@@ -62,7 +136,7 @@ export const StudentDashboard = () => {
           <StatCard
             icon={Icons.TrendingUp}
             label="Upcoming Drives"
-            value={STATS.upcomingDrives}
+            value={stats.upcomingDrives}
             trend={20}
             color="purple"
           />
@@ -71,7 +145,7 @@ export const StudentDashboard = () => {
           <StatCard
             icon={Icons.FileText}
             label="Resume Score"
-            value={`${STATS.resumeScore}%`}
+            value={`${stats.resumeScore}%`}
             trend={5}
             color="emerald"
           />
@@ -80,7 +154,7 @@ export const StudentDashboard = () => {
           <StatCard
             icon={Icons.Award}
             label="Tests Completed"
-            value={STATS.testsCompleted}
+            value={stats.testsCompleted}
             trend={25}
             color="orange"
           />

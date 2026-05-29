@@ -11,7 +11,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = [
             'id', 'user', 'title', 'message', 'notification_type',
-            'is_read', 'action_url', 'icon_type', 'created_at'
+            'is_read', 'action_url', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']
 
@@ -28,7 +28,7 @@ class InterviewExperienceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterviewExperience
         fields = [
-            'id', 'company_name', 'position', 'difficulty', 'author_name',
+            'id', 'company', 'position', 'difficulty', 'author_name',
             'author_email', 'upvotes', 'created_at'
         ]
         read_only_fields = fields
@@ -42,9 +42,9 @@ class InterviewExperienceDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterviewExperience
         fields = [
-            'id', 'company_name', 'position', 'difficulty',
-            'interview_rounds', 'tips_and_insights', 'interview_result',
-            'author', 'author_email', 'upvotes', 'created_at', 'updated_at'
+            'id', 'company', 'position', 'difficulty',
+            'rounds', 'questions_asked', 'tips', 'result',
+            'date', 'author', 'author_email', 'upvotes', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'author', 'author_email', 'upvotes', 'created_at', 'updated_at']
 
