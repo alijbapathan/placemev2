@@ -3,11 +3,18 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import * as Icons from 'lucide-react'
 import { SIDEBAR_ITEMS } from '../constants/dummyData'
+import { useAuthStore } from '../context/authContext'
 
 export const Sidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { logout } = useAuthStore()
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   const containerVariants = {
     initial: { x: -300 },
@@ -79,6 +86,7 @@ export const Sidebar = () => {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={handleLogout}
           className="w-full rounded-lg bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 text-sm font-medium hover:bg-red-100 transition-all duration-200 flex items-center justify-center gap-2"
         >
           <Icons.LogOut className={`w-5 h-5 ${isCollapsed && 'w-4 h-4'}`} />

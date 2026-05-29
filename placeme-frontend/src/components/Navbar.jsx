@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../context/authContext'
+import { auth } from '../services/apiClient'
 import { 
   BellIcon, 
   UserCircleIcon, 
@@ -10,12 +11,30 @@ import {
 } from '@heroicons/react/24/outline'
 
 const Navbar = () => {
-  const { user, logout } = useAuthStore()
+  const { logout } = useAuthStore()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState(null)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const res = await auth.getProfile()
+      setUser(res.data)
+    } catch (err) {
+      console.error('Error fetching user profile:', err)
+    } finally {
+      setLoadingUser(false)
+    }
+  }
 
   const handleLogout = () => {
     logout()
+    setUser(null)
     navigate('/login')
   }
 
@@ -60,7 +79,7 @@ const Navbar = () => {
               <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
                 <UserCircleIcon className="w-6 h-6 text-gray-600" />
                 <span className="hidden sm:inline text-sm font-medium text-gray-700">
-                  {user?.first_name || user?.username}
+                  {loadingUser ? 'Loading...' : (user?.first_name || user?.username || 'User')}
                 </span>
               </button>
 

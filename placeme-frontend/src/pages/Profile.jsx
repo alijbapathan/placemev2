@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import * as Icons from 'lucide-react'
 import { DashboardCard } from '../components/DashboardCard'
 import { Button } from '../components/Button'
 import { Badge } from '../components/Badge'
-import { STUDENT_INFO } from '../constants/dummyData'
+import { auth } from '../services/apiClient'
 
 const ComingSoonSection = ({ title, icon: Icon }) => {
   return (
@@ -25,6 +26,34 @@ const ComingSoonSection = ({ title, icon: Icon }) => {
 }
 
 export const Profile = () => {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await auth.getProfile()
+        setUser(res.data)
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  const userName = user?.first_name ? `${user.first_name} ${user.last_name || ''}` : user?.username || 'Student'
+  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'user'}`
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -47,17 +76,17 @@ export const Profile = () => {
         <div className="relative z-10">
           <div className="flex items-start gap-6">
             <img
-              src={STUDENT_INFO.avatar}
-              alt={STUDENT_INFO.name}
-              className="w-24 h-24 rounded-full border-4 border-indigo-500/50"
+              src={userAvatar}
+              alt={userName}
+              className="w-24 h-24 rounded-full border-4 border-indigo-500/50 object-cover"
             />
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-slate-900">{STUDENT_INFO.name}</h2>
-              <p className="text-slate-600 mt-1">{STUDENT_INFO.email}</p>
-              <div className="flex gap-4 mt-4">
-                <Badge variant="default">{STUDENT_INFO.branch}</Badge>
-                <Badge variant="success">CGPA: {STUDENT_INFO.cgpa}</Badge>
-                <Badge variant="purple">Member since {STUDENT_INFO.joinDate}</Badge>
+              <h2 className="text-3xl font-bold text-slate-900">{userName}</h2>
+              <p className="text-slate-600 mt-1">{user?.email || 'No email provided'}</p>
+              <div className="flex flex-wrap gap-4 mt-4">
+                <Badge variant="default">{user?.branch || 'Computer Science'}</Badge>
+                <Badge variant="success">CGPA: {user?.cgpa || 'N/A'}</Badge>
+                <Badge variant="purple">Joined: {user?.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'N/A'}</Badge>
               </div>
             </div>
             <Button variant="primary">Edit Profile</Button>

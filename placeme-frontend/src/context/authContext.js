@@ -19,9 +19,11 @@ export const useAuthStore = create(
       },
 
       logout: () => {
-        // Clear localStorage
+        // Clear localStorage tokens
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
+        // Clear persisted Zustand state
+        localStorage.removeItem('placeme-auth')
         
         set({
           user: null,

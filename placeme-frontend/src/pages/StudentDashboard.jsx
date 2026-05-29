@@ -6,11 +6,12 @@ import { DashboardCard } from '../components/DashboardCard'
 import { Badge } from '../components/Badge'
 import { Button } from '../components/Button'
 import { auth, placement, training } from '../services/apiClient'
-import { UPCOMING_DRIVES, NOTIFICATIONS, ACTIVITY_TIMELINE, AI_SUGGESTIONS, MOCK_TESTS } from '../constants/dummyData'
+import { NOTIFICATIONS, ACTIVITY_TIMELINE, AI_SUGGESTIONS, MOCK_TESTS } from '../constants/dummyData'
 
 export const StudentDashboard = () => {
   const [animateCounters, setAnimateCounters] = useState(false)
   const [user, setUser] = useState(null)
+  const [drives, setDrives] = useState([])
   const [stats, setStats] = useState({
     appliedDrives: 0,
     upcomingDrives: 0,
@@ -51,9 +52,9 @@ export const StudentDashboard = () => {
       try {
         const drivesRes = await placement.getDrives({ is_active: true })
         const drivesData = Array.isArray(drivesRes.data) ? drivesRes.data : drivesRes.data?.results || []
-        const upcomingCount = drivesData.length
-        console.log('Upcoming drives count:', upcomingCount)
-        setStats(prev => ({ ...prev, upcomingDrives: upcomingCount }))
+        console.log('Upcoming drives:', drivesData)
+        setDrives(drivesData)
+        setStats(prev => ({ ...prev, upcomingDrives: drivesData.length }))
       } catch (err) {
         console.error('Error fetching drives:', err)
       }
@@ -172,41 +173,45 @@ export const StudentDashboard = () => {
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <DashboardCard title="Upcoming Placement Drives" icon={Icons.Calendar}>
             <div className="space-y-3">
-              {UPCOMING_DRIVES.map((drive, idx) => (
-                <motion.div
-                  key={drive.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ translateX: 5 }}
-                  className="group p-4 rounded-xl border border-slate-200 hover:border-indigo-300 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <img
-                        src={drive.logo}
-                        alt={drive.company}
-                        className="w-12 h-12 rounded-lg border border-slate-200"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900">{drive.company}</h3>
-                        <p className="text-sm text-slate-600 mt-1">{drive.position}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="success" size="xs">
-                            {drive.package}
-                          </Badge>
-                          <Badge variant="default" size="xs">
-                            {drive.eligibility}
-                          </Badge>
+              {drives.length > 0 ? (
+                drives.map((drive, idx) => (
+                  <motion.div
+                    key={drive.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ translateX: 5 }}
+                    className="group p-4 rounded-xl border border-slate-200 hover:border-indigo-300 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-lg border border-slate-200 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                          {(typeof drive.company === 'string' ? drive.company : drive.company?.name)?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-900">{drive.company?.name || drive.company}</h3>
+                          <p className="text-sm text-slate-600 mt-1">{drive.position || 'Multiple Positions'}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="success" size="xs">
+                              ₹{drive.ctc || 'N/A'} LPA
+                            </Badge>
+                            <Badge variant="default" size="xs">
+                              {drive.eligible_cgpa || 'N/A'} CGPA
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+                      <Button variant="primary" size="sm">
+                        Apply Now
+                      </Button>
                     </div>
-                    <Button variant="primary" size="sm">
-                      Apply Now
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <p>No upcoming drives at the moment</p>
+                </div>
+              )}
             </div>
           </DashboardCard>
         </motion.div>

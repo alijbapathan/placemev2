@@ -32,8 +32,14 @@ const Login = () => {
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)
 
-      // Store in auth store
-      login({ username: formData.username }, access, refresh)
+      // Fetch user profile
+      try {
+        const userRes = await auth.getProfile()
+        login(userRes.data, access, refresh)
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+        login({ username: formData.username }, access, refresh)
+      }
 
       toast.success('Login successful!')
       navigate('/dashboard')
