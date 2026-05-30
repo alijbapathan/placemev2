@@ -16,6 +16,7 @@ import { InterviewExperience } from './pages/InterviewExperience'
 import { ResumeBuilder } from './pages/ResumeBuilder'
 import { NotificationsPage } from './pages/Notifications'
 import { Settings } from './pages/Settings'
+import { Training } from './pages/Training'
 
 // Components & Layouts
 import Navbar from './components/Navbar'
@@ -48,6 +49,7 @@ function App() {
               <Route path="/resume" element={<ResumeBuilder />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/training" element={<Training />} />
             </Route>
           </Route>
 
