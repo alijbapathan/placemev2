@@ -71,10 +71,7 @@ class InterviewExperienceViewSet(viewsets.ModelViewSet):
         return InterviewExperience.objects.all().select_related('author')
 
     def get_serializer_class(self):
-        """Use different serializers for list and detail"""
-        if self.action == 'retrieve':
-            return InterviewExperienceDetailSerializer
-        return InterviewExperienceListSerializer
+        return InterviewExperienceDetailSerializer
 
     def create(self, request, *args, **kwargs):
         """Create interview experience (authenticated)"""
