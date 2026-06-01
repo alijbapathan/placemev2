@@ -32,17 +32,23 @@ const Login = () => {
       localStorage.setItem('access_token', access)
       localStorage.setItem('refresh_token', refresh)
 
-      // Fetch user profile
-      try {
-        const userRes = await auth.getProfile()
-        login(userRes.data, access, refresh)
-      } catch (err) {
-        console.error('Error fetching profile:', err)
-        login({ username: formData.username }, access, refresh)
-      }
+      // Small delay to ensure token is set in interceptor
+      await new Promise(resolve => setTimeout(resolve, 50))
 
+      // Now get user data with the token
+      const userRes = await authService.getMe()
+      
+      // Store everything in auth store
+      console.log('User Data:', userRes.data)
+      login(userRes.data, access, refresh)
       toast.success('Login successful!')
-      navigate('/dashboard')
+
+// Temporary recruiter login for demo
+if (formData.username.toLowerCase() === 'messi') {
+  navigate('/recruiter/dashboard')
+} else {
+  navigate('/dashboard')
+}
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message)
       const errorMsg = error.response?.data?.detail || 'Invalid username or password'
