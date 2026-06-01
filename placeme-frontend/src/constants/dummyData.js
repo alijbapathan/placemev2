@@ -270,7 +270,7 @@ export const SIDEBAR_ITEMS = [
   },
   {
     id: 'resume',
-    label: 'Resume Builder',
+    label: 'ATS Resume',
     icon: 'FileDown',
     path: '/resume'
   },

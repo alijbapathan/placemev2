@@ -1,7 +1,58 @@
 import axios from 'axios'
 
 const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
   'http://localhost:8000/api'
+
+export const API_ORIGIN =
+  API_BASE_URL.replace(
+    /\/api\/?$/,
+    ''
+  )
+
+export const resolveMediaUrl = (
+  path
+) => {
+  if (!path) {
+    return null
+  }
+
+  if (
+    typeof path === 'string' &&
+    (path.startsWith('http://') ||
+      path.startsWith('https://'))
+  ) {
+    return path
+  }
+
+  const normalized = String(path).startsWith(
+    '/'
+  )
+    ? path
+    : `/${path}`
+
+  return `${API_ORIGIN}${normalized}`
+}
+
+export const getResumeFileName = (
+  resumePath
+) => {
+  if (!resumePath) {
+    return ''
+  }
+
+  const url =
+    resolveMediaUrl(resumePath) ||
+    String(resumePath)
+
+  try {
+    const name = url.split('/').pop() || 'Resume'
+
+    return decodeURIComponent(name)
+  } catch {
+    return 'Resume'
+  }
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -474,6 +525,19 @@ export const auth = {
     apiClient.put(
       '/users/resume/',
       data
+    ),
+
+  getResumeScore: () =>
+    apiClient.get(
+      '/users/resume/'
+    ),
+
+  analyzeResume: (
+    formData
+  ) =>
+    apiClient.post(
+      '/users/resume/analyze/',
+      formData
     ),
 }
 // ============================================

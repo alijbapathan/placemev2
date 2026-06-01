@@ -12,7 +12,9 @@ import { Badge } from '../components/Badge'
 
 import {
   auth,
-  career
+  career,
+  resolveMediaUrl,
+  getResumeFileName,
 } from '../services/apiClient'
 
 const EMPTY_PROJECT_FORM = {
@@ -98,6 +100,14 @@ export const Profile = () => {
     })
 
   const [resumeFile, setResumeFile] =
+    useState(null)
+
+  const [profilePictureFile,
+    setProfilePictureFile] =
+    useState(null)
+
+  const [profilePicturePreview,
+    setProfilePicturePreview] =
     useState(null)
 
   // ============================================
@@ -229,6 +239,7 @@ export const Profile = () => {
   }
 
   const completion =
+    profile?.profile_completion ??
     calculateCompletion()
 
   const isPlacementReady = () => {
@@ -276,17 +287,28 @@ export const Profile = () => {
       )
     }
 
-    if (resumeFile) {
+    if (resumeFile || profilePictureFile) {
       const multipart = new FormData()
       Object.entries(payload).forEach(
         ([key, value]) => {
           multipart.append(key, value)
         }
       )
-      multipart.append(
-        'resume',
-        resumeFile
-      )
+
+      if (resumeFile) {
+        multipart.append(
+          'resume',
+          resumeFile
+        )
+      }
+
+      if (profilePictureFile) {
+        multipart.append(
+          'profile_picture',
+          profilePictureFile
+        )
+      }
+
       return multipart
     }
 
@@ -309,6 +331,15 @@ export const Profile = () => {
         await refreshProfile()
 
         setResumeFile(null)
+        setProfilePictureFile(null)
+
+        if (profilePicturePreview) {
+          URL.revokeObjectURL(
+            profilePicturePreview
+          )
+        }
+
+        setProfilePicturePreview(null)
         setShowEditModal(false)
 
         toast.success(
@@ -463,10 +494,54 @@ export const Profile = () => {
   // AVATAR
   // ============================================
 
-  const userAvatar =
+  const defaultAvatar =
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${
       user?.username || 'user'
     }`
+
+  const displayAvatar =
+    profilePicturePreview ||
+    resolveMediaUrl(
+      profile?.profile_picture
+    ) ||
+    defaultAvatar
+
+  const resumeUrl = resolveMediaUrl(
+    profile?.resume
+  )
+
+  const resumeFileName = getResumeFileName(
+    profile?.resume
+  )
+
+  const handleProfilePictureChange = (
+    e
+  ) => {
+    const file =
+      e.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error(
+        'Please choose an image file'
+      )
+      return
+    }
+
+    if (profilePicturePreview) {
+      URL.revokeObjectURL(
+        profilePicturePreview
+      )
+    }
+
+    setProfilePictureFile(file)
+    setProfilePicturePreview(
+      URL.createObjectURL(file)
+    )
+  }
 
   const fullName =
     user?.first_name ||
@@ -539,17 +614,37 @@ export const Profile = () => {
         ">
 
           {/* AVATAR */}
-          <div className="relative">
+          <div className="relative group">
 
             <img
-              src={userAvatar}
+              src={displayAvatar}
               alt={fullName}
               className="
                 w-32 h-32 rounded-full
                 border-4 border-white/30
-                shadow-2xl
+                shadow-2xl object-cover
+                bg-white/20
               "
             />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowEditModal(true)
+              }
+              className="
+                absolute inset-0 flex
+                items-center justify-center
+                rounded-full bg-black/40
+                opacity-0 group-hover:opacity-100
+                transition-opacity
+              "
+              aria-label="Change profile photo"
+            >
+              <Icons.Camera className="
+                w-8 h-8 text-white
+              " />
+            </button>
 
             <div className="
               absolute bottom-2 right-2
@@ -733,6 +828,115 @@ export const Profile = () => {
               {profile?.about ||
                 'Add your bio and career interests'}
             </p>
+          </div>
+
+          {/* RESUME */}
+          <div className="
+            rounded-3xl border
+            border-slate-200
+            bg-white p-8
+          ">
+            <div className="
+              flex items-center gap-3
+              mb-6
+            ">
+              <Icons.FileText className="
+                w-6 h-6 text-indigo-600
+              " />
+
+              <h2 className="
+                text-2xl font-bold
+              ">
+                Resume
+              </h2>
+            </div>
+
+            {resumeUrl ? (
+              <div className="
+                flex flex-col sm:flex-row
+                sm:items-center
+                sm:justify-between gap-4
+                rounded-2xl border
+                border-slate-200 bg-slate-50
+                p-5
+              ">
+                <div className="flex items-center gap-4">
+                  <div className="
+                    flex h-14 w-14 items-center
+                    justify-center rounded-2xl
+                    bg-indigo-100 text-indigo-600
+                  ">
+                    <Icons.FileText className="w-7 h-7" />
+                  </div>
+
+                  <div>
+                    <p className="
+                      font-semibold text-slate-900
+                    ">
+                      {resumeFileName}
+                    </p>
+                    <p className="
+                      text-sm text-slate-500 mt-1
+                    ">
+                      Your uploaded resume is ready
+                      for placement applications
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Button variant="primary">
+                      <Icons.ExternalLink className="w-4 h-4" />
+                      View resume
+                    </Button>
+                  </a>
+
+                  <a
+                    href={resumeUrl}
+                    download={resumeFileName}
+                  >
+                    <Button variant="secondary">
+                      <Icons.Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="
+                rounded-2xl border border-dashed
+                border-slate-300 bg-slate-50
+                p-8 text-center
+              ">
+                <Icons.FileText className="
+                  w-10 h-10 text-slate-400
+                  mx-auto mb-3
+                " />
+                <p className="text-slate-600">
+                  No resume uploaded yet
+                </p>
+                <p className="
+                  text-sm text-slate-500 mt-2
+                ">
+                  Upload a PDF in Edit Profile to
+                  complete your placement profile
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() =>
+                    setShowEditModal(true)
+                  }
+                >
+                  Upload resume
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* PROJECTS */}
@@ -1214,6 +1418,56 @@ export const Profile = () => {
               "
             >
 
+              {/* PROFILE PHOTO */}
+              <div className="
+                flex flex-col sm:flex-row
+                items-center gap-6
+                rounded-2xl border
+                border-slate-200 bg-slate-50 p-5
+              ">
+                <img
+                  src={
+                    profilePicturePreview ||
+                    resolveMediaUrl(
+                      profile?.profile_picture
+                    ) ||
+                    defaultAvatar
+                  }
+                  alt="Profile preview"
+                  className="
+                    w-24 h-24 rounded-full
+                    object-cover border-4
+                    border-white shadow-md
+                  "
+                />
+
+                <div className="flex-1 w-full">
+                  <label className="
+                    block text-sm font-semibold
+                    text-slate-700 mb-2
+                  ">
+                    Profile photo
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={
+                      handleProfilePictureChange
+                    }
+                    className="
+                      w-full p-3 rounded-2xl
+                      border border-slate-300
+                      bg-white
+                    "
+                  />
+                  <p className="
+                    text-xs text-slate-500 mt-2
+                  ">
+                    JPG, PNG, or WebP recommended
+                  </p>
+                </div>
+              </div>
+
               <input
                 type="text"
                 placeholder="Professional Headline"
@@ -1474,7 +1728,6 @@ export const Profile = () => {
                     const file = e.target.files?.[0]
                     if (file) {
                       setResumeFile(file)
-                      // Show file name
                       setFormData({
                         ...formData,
                         resume: file.name
@@ -1488,12 +1741,39 @@ export const Profile = () => {
                     focus:outline-none
                   "
                 />
-                {formData.resume && (
+
+                {resumeFile && (
                   <p className="
-                    text-sm text-slate-600 mt-2
+                    text-sm text-emerald-700 mt-2
                   ">
-                    📄 {typeof formData.resume === 'string' ? formData.resume : formData.resume?.name}
+                    New file selected:
+                    {' '}
+                    {resumeFile.name}
                   </p>
+                )}
+
+                {!resumeFile && resumeUrl && (
+                  <div className="
+                    mt-3 flex flex-wrap items-center
+                    gap-3 text-sm
+                  ">
+                    <span className="text-slate-600">
+                      Current:
+                      {' '}
+                      {resumeFileName}
+                    </span>
+                    <a
+                      href={resumeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="
+                        font-semibold text-indigo-600
+                        hover:underline
+                      "
+                    >
+                      View current resume
+                    </a>
+                  </div>
                 )}
                 <p className="
                   text-xs text-slate-500 mt-1
@@ -1512,6 +1792,176 @@ export const Profile = () => {
                 {saving
                   ? 'Saving...'
                   : 'Save Career Profile'}
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* PROJECT MODAL */}
+      {showProjectModal && (
+        <div className="
+          fixed inset-0 z-50
+          flex items-center justify-center
+          bg-black/50 p-4
+        ">
+          <div className="
+            w-full max-w-2xl
+            rounded-3xl bg-white
+            p-8 max-h-[90vh]
+            overflow-y-auto
+          ">
+            <div className="
+              flex items-center
+              justify-between mb-8
+            ">
+              <h2 className="text-3xl font-bold">
+                {editingProjectId
+                  ? 'Edit Project'
+                  : 'Add Project'}
+              </h2>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowProjectModal(false)
+                }
+              >
+                <Icons.X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleSaveProject}
+              className="space-y-5"
+            >
+              <input
+                type="text"
+                placeholder="Project title *"
+                value={projectForm.title}
+                onChange={(e) =>
+                  setProjectForm({
+                    ...projectForm,
+                    title: e.target.value,
+                  })
+                }
+                required
+                className="
+                  w-full p-4 rounded-2xl
+                  border border-slate-300
+                  focus:border-indigo-500
+                  focus:outline-none
+                "
+              />
+
+              <textarea
+                rows={4}
+                placeholder="Description *"
+                value={projectForm.description}
+                onChange={(e) =>
+                  setProjectForm({
+                    ...projectForm,
+                    description: e.target.value,
+                  })
+                }
+                required
+                className="
+                  w-full p-4 rounded-2xl
+                  border border-slate-300
+                  focus:border-indigo-500
+                  focus:outline-none
+                "
+              />
+
+              <input
+                type="text"
+                placeholder="Tech stack * (e.g. React, Django, PostgreSQL)"
+                value={projectForm.tech_stack}
+                onChange={(e) =>
+                  setProjectForm({
+                    ...projectForm,
+                    tech_stack: e.target.value,
+                  })
+                }
+                required
+                className="
+                  w-full p-4 rounded-2xl
+                  border border-slate-300
+                  focus:border-indigo-500
+                  focus:outline-none
+                "
+              />
+
+              <input
+                type="url"
+                placeholder="GitHub URL (optional)"
+                value={projectForm.github_url}
+                onChange={(e) =>
+                  setProjectForm({
+                    ...projectForm,
+                    github_url: e.target.value,
+                  })
+                }
+                className="
+                  w-full p-4 rounded-2xl
+                  border border-slate-300
+                "
+              />
+
+              <input
+                type="url"
+                placeholder="Live demo URL (optional)"
+                value={projectForm.live_url}
+                onChange={(e) =>
+                  setProjectForm({
+                    ...projectForm,
+                    live_url: e.target.value,
+                  })
+                }
+                className="
+                  w-full p-4 rounded-2xl
+                  border border-slate-300
+                "
+              />
+
+              <label className="
+                flex items-center gap-3
+                text-slate-700 font-medium
+              ">
+                <input
+                  type="checkbox"
+                  checked={projectForm.featured}
+                  onChange={(e) =>
+                    setProjectForm({
+                      ...projectForm,
+                      featured: e.target.checked,
+                    })
+                  }
+                  className="
+                    w-4 h-4 rounded
+                    border-slate-300
+                    text-indigo-600
+                  "
+                />
+                Mark as featured project
+              </label>
+
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                disabled={
+                  savingProject ||
+                  !projectForm.title.trim() ||
+                  !projectForm.description.trim() ||
+                  !projectForm.tech_stack.trim()
+                }
+              >
+                {savingProject
+                  ? 'Saving...'
+                  : editingProjectId
+                    ? 'Update Project'
+                    : 'Add Project'}
               </Button>
             </form>
           </div>

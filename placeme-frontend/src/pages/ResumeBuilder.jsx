@@ -1,494 +1,367 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { toast } from 'react-toastify'
 import * as Icons from 'lucide-react'
 
-import { DashboardCard } from '../components/DashboardCard'
 import { Button } from '../components/Button'
-
+import { Badge } from '../components/Badge'
 import { auth } from '../services/apiClient'
 
 export const ResumeBuilder = () => {
-  // ============================================
-  // STATE
-  // ============================================
-
-  const [loading, setLoading] =
-    useState(true)
-
-  const [saving, setSaving] =
+  const [resumeFile, setResumeFile] = useState(null)
+  const [useProfileResume, setUseProfileResume] =
     useState(false)
-
-  const [resumeData, setResumeData] =
-    useState({
-      headline: '',
-      summary: '',
-      skills: '',
-      education: '',
-      experience: '',
-      projects: '',
-      linkedin_url: '',
-      github_url: '',
-      portfolio_url: '',
-    })
-
-  // ============================================
-  // FETCH RESUME
-  // ============================================
+  const [jobDescription, setJobDescription] =
+    useState('')
+  const [analyzing, setAnalyzing] = useState(false)
+  const [result, setResult] = useState(null)
+  const [lastScore, setLastScore] = useState(null)
 
   useEffect(() => {
-    fetchResume()
-  }, [])
-
-  const fetchResume = async () => {
-    try {
-      setLoading(true)
-
-      const response =
-        await auth.getResume()
-
-      setResumeData({
-        headline:
-          response.data.headline ||
-          '',
-
-        summary:
-          response.data.summary ||
-          '',
-
-        skills:
-          response.data.skills ||
-          '',
-
-        education:
-          response.data.education ||
-          '',
-
-        experience:
-          response.data.experience ||
-          '',
-
-        projects:
-          response.data.projects ||
-          '',
-
-        linkedin_url:
-          response.data.linkedin_url ||
-          '',
-
-        github_url:
-          response.data.github_url ||
-          '',
-
-        portfolio_url:
-          response.data.portfolio_url ||
-          '',
-      })
-
-    } catch (error) {
-      console.error(
-        'Error fetching resume:',
-        error
-      )
-
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ============================================
-  // HANDLE CHANGE
-  // ============================================
-
-  const handleChange = (e) => {
-    const { name, value } =
-      e.target
-
-    setResumeData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  // ============================================
-  // SAVE RESUME
-  // ============================================
-
-  const handleSaveResume =
-    async () => {
+    const fetchLastScore = async () => {
       try {
-        setSaving(true)
-
-        await auth.updateResume(
-          resumeData
-        )
-
-        alert(
-          'Resume saved successfully 😎🔥'
-        )
-
-      } catch (error) {
-        console.error(
-          'Error saving resume:',
-          error.response?.data ||
-            error
-        )
-
-        alert(
-          'Failed to save resume'
-        )
-
-      } finally {
-        setSaving(false)
+        const response =
+          await auth.getResumeScore()
+        if (response.data?.resume_score) {
+          setLastScore(
+            response.data.resume_score
+          )
+        }
+      } catch {
+        // no saved score yet
       }
     }
 
-  // ============================================
-  // CALCULATE COMPLETION
-  // ============================================
+    fetchLastScore()
+  }, [])
 
-  const fields = Object.values(
-    resumeData
-  )
+  const handleAnalyze = async (e) => {
+    e.preventDefault()
 
-  const completedFields =
-    fields.filter(
-      (field) =>
-        field &&
-        field.trim() !== ''
-    ).length
+    if (jobDescription.trim().length < 50) {
+      toast.error(
+        'Paste a job description (at least 50 characters)'
+      )
+      return
+    }
 
-  const completionPercentage =
-    Math.round(
-      (completedFields /
-        fields.length) *
-        100
-    )
+    if (!resumeFile && !useProfileResume) {
+      toast.error(
+        'Upload a resume or use your profile resume'
+      )
+      return
+    }
 
-  // ============================================
-  // LOADING
-  // ============================================
+    try {
+      setAnalyzing(true)
+      setResult(null)
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
+      const formData = new FormData()
+      formData.append(
+        'job_description',
+        jobDescription.trim()
+      )
+      formData.append(
+        'use_profile_resume',
+        useProfileResume ? 'true' : 'false'
+      )
 
-        <div className="text-center">
+      if (resumeFile) {
+        formData.append('resume', resumeFile)
+      }
 
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+      const response =
+        await auth.analyzeResume(formData)
 
-          <p className="text-slate-600">
-            Loading resume...
-          </p>
-        </div>
-      </div>
-    )
+      setResult(response.data)
+      setLastScore(response.data.score)
+
+      toast.success(
+        `ATS analysis complete — score ${response.data.score}%`
+      )
+    } catch (error) {
+      const message =
+        error.response?.data?.error ||
+        'Failed to analyze resume'
+
+      toast.error(message)
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'text-emerald-600'
+    if (score >= 65) return 'text-indigo-600'
+    if (score >= 50) return 'text-amber-600'
+    return 'text-red-600'
+  }
+
+  const getScoreRing = (score) => {
+    if (score >= 80) return 'border-emerald-500'
+    if (score >= 65) return 'border-indigo-500'
+    if (score >= 50) return 'border-amber-500'
+    return 'border-red-500'
+  }
+
+  const priorityStyles = {
+    high: 'border-red-200 bg-red-50',
+    medium: 'border-amber-200 bg-amber-50',
+    low: 'border-slate-200 bg-slate-50',
   }
 
   return (
     <div className="space-y-8">
-
-      {/* HEADER */}
       <motion.div
-        initial={{
-          opacity: 0,
-          y: -20,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
       >
-
         <h1 className="text-4xl font-bold text-slate-900 mb-2">
-
-          Resume Builder
+          ATS Resume Analyzer
         </h1>
-
-        <p className="text-slate-600">
-          Build your professional
-          resume for placements
+        <p className="text-slate-600 max-w-2xl">
+          Upload your resume and paste a job description.
+          Get an ATS-style match score and tailored
+          suggestions to improve your chances.
         </p>
+
+        {lastScore != null && (
+          <p className="text-sm text-slate-500 mt-3">
+            Last saved score:{' '}
+            <span className="font-semibold text-indigo-600">
+              {lastScore}%
+            </span>
+          </p>
+        )}
       </motion.div>
 
-      {/* PROGRESS */}
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 20,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        className="rounded-2xl border border-slate-200 bg-white p-6"
-      >
-
-        <div className="flex items-center justify-between mb-4">
-
-          <h3 className="text-lg font-bold text-slate-900">
-
-            Resume Completion
-          </h3>
-
-          <span className="text-2xl font-bold text-indigo-600">
-
-            {
-              completionPercentage
-            }
-            %
-          </span>
-        </div>
-
-        <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
-
-          <motion.div
-            initial={{
-              width: 0,
-            }}
-            animate={{
-              width: `${completionPercentage}%`,
-            }}
-            transition={{
-              duration: 0.8,
-            }}
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
-          />
-        </div>
-      </motion.div>
-
-      {/* FORM */}
-      <DashboardCard
-        title="Resume Details"
-        icon={Icons.FileText}
-      >
-
-        <div className="space-y-6">
-
-          {/* HEADLINE */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <motion.form
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onSubmit={handleAnalyze}
+          className="rounded-3xl border border-slate-200 bg-white p-8 space-y-6"
+        >
           <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Professional Headline
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Resume file
             </label>
-
             <input
-              type="text"
-              name="headline"
-              value={
-                resumeData.headline
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Frontend Developer | MERN Stack | Problem Solver"
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              type="file"
+              accept=".pdf,.docx"
+              disabled={useProfileResume}
+              onChange={(e) => {
+                setResumeFile(
+                  e.target.files?.[0] || null
+                )
+              }}
+              className="w-full p-4 rounded-2xl border border-slate-300 disabled:bg-slate-100"
             />
+            <p className="text-xs text-slate-500 mt-2">
+              PDF or DOCX (text-based, not scanned images)
+            </p>
           </div>
 
-          {/* SUMMARY */}
-          <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Professional Summary
-            </label>
-
-            <textarea
-              rows={4}
-              name="summary"
-              value={
-                resumeData.summary
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Write a short professional summary..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* SKILLS */}
-          <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Skills
-            </label>
-
-            <textarea
-              rows={3}
-              name="skills"
-              value={
-                resumeData.skills
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="React, Django, Python, SQL, JavaScript..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* EDUCATION */}
-          <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Education
-            </label>
-
-            <textarea
-              rows={4}
-              name="education"
-              value={
-                resumeData.education
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Your education details..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* EXPERIENCE */}
-          <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Experience
-            </label>
-
-            <textarea
-              rows={4}
-              name="experience"
-              value={
-                resumeData.experience
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Internships, work experience..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* PROJECTS */}
-          <div>
-
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-
-              Projects
-            </label>
-
-            <textarea
-              rows={4}
-              name="projects"
-              value={
-                resumeData.projects
-              }
-              onChange={
-                handleChange
-              }
-              placeholder="Your major projects..."
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-
-          {/* LINKS */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-
-                LinkedIn URL
-              </label>
-
-              <input
-                type="text"
-                name="linkedin_url"
-                value={
-                  resumeData.linkedin_url
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useProfileResume}
+              onChange={(e) => {
+                setUseProfileResume(
+                  e.target.checked
+                )
+                if (e.target.checked) {
+                  setResumeFile(null)
                 }
-                onChange={
-                  handleChange
-                }
-                placeholder="https://linkedin.com/..."
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+              }}
+              className="w-4 h-4 rounded border-slate-300 text-indigo-600"
+            />
+            <span className="text-sm text-slate-700">
+              Use resume from my Profile instead
+            </span>
+          </label>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Job description *
+            </label>
+            <textarea
+              rows={12}
+              value={jobDescription}
+              onChange={(e) =>
+                setJobDescription(e.target.value)
+              }
+              placeholder="Paste the full job description here — include required skills, responsibilities, and qualifications..."
+              className="w-full p-4 rounded-2xl border border-slate-300 focus:border-indigo-500 focus:outline-none resize-y min-h-[200px]"
+              required
+            />
+            <p className="text-xs text-slate-500 mt-2">
+              {jobDescription.trim().length} / 50 min characters
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={analyzing}
+          >
+            {analyzing ? (
+              <>
+                <Icons.Loader2 className="w-4 h-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                <Icons.Sparkles className="w-4 h-4" />
+                Analyze for this job
+              </>
+            )}
+          </Button>
+        </motion.form>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          {!result && !analyzing && (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-12 text-center">
+              <Icons.Target className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <p className="text-slate-600 font-medium">
+                Your ATS report will appear here
+              </p>
+              <p className="text-sm text-slate-500 mt-2">
+                Keyword match, section checks, and
+                improvement tips
+              </p>
             </div>
+          )}
 
-            <div>
-
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-
-                GitHub URL
-              </label>
-
-              <input
-                type="text"
-                name="github_url"
-                value={
-                  resumeData.github_url
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="https://github.com/..."
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+          {analyzing && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center">
+              <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-slate-600">
+                Reading resume and comparing to job
+                description...
+              </p>
             </div>
+          )}
 
-            <div>
+          {result && (
+            <>
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center">
+                <div
+                  className={`mx-auto w-36 h-36 rounded-full border-8 flex flex-col items-center justify-center ${getScoreRing(result.score)}`}
+                >
+                  <span
+                    className={`text-4xl font-black ${getScoreColor(result.score)}`}
+                  >
+                    {result.score}%
+                  </span>
+                  <span className="text-sm text-slate-500 mt-1">
+                    ATS score
+                  </span>
+                </div>
+                <p className="text-xl font-bold text-slate-900 mt-4">
+                  {result.grade}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {result.word_count} words detected
+                  {result.resume_source === 'profile'
+                    ? ' · from profile resume'
+                    : ' · from upload'}
+                </p>
+              </div>
 
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <div className="rounded-3xl border border-slate-200 bg-white p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Score breakdown
+                </h3>
+                <div className="space-y-4">
+                  {Object.entries(
+                    result.breakdown || {}
+                  ).map(([key, value]) => (
+                    <div key={key}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-600 capitalize">
+                          {key.replace(/_/g, ' ')}
+                        </span>
+                        <span className="font-semibold text-slate-900">
+                          {value}%
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                          style={{
+                            width: `${value}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                Portfolio URL
-              </label>
+              <div className="rounded-3xl border border-slate-200 bg-white p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Keywords
+                </h3>
+                <p className="text-sm text-slate-600 mb-3">
+                  Matched ({result.matched_keywords?.length || 0})
+                </p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {(result.matched_keywords || []).length > 0 ? (
+                    result.matched_keywords.map((kw) => (
+                      <Badge key={kw} variant="success">
+                        {kw}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-500">
+                      None yet
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-slate-600 mb-3">
+                  Missing ({result.missing_keywords?.length || 0})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(result.missing_keywords || []).map((kw) => (
+                    <Badge key={kw} variant="warning">
+                      {kw}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
 
-              <input
-                type="text"
-                name="portfolio_url"
-                value={
-                  resumeData.portfolio_url
-                }
-                onChange={
-                  handleChange
-                }
-                placeholder="https://portfolio.com/..."
-                className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-
-          {/* BUTTONS */}
-          <div className="flex justify-center pt-4">
-
-            <Button
-              variant="primary"
-              onClick={
-                handleSaveResume
-              }
-              disabled={saving}
-            >
-
-              {saving ? (
-                <>
-                  <Icons.Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Icons.Save className="w-4 h-4" />
-                  Save Resume
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </DashboardCard>
+              <div className="rounded-3xl border border-slate-200 bg-white p-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">
+                  Suggestions
+                </h3>
+                <div className="space-y-3">
+                  {(result.suggestions || []).map(
+                    (item, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-2xl border ${priorityStyles[item.priority] || priorityStyles.medium}`}
+                      >
+                        <p className="text-sm font-semibold text-slate-800 capitalize mb-1">
+                          {item.type} · {item.priority}
+                        </p>
+                        <p className="text-sm text-slate-700">
+                          {item.message}
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
     </div>
   )
 }

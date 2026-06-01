@@ -36,6 +36,20 @@ class MyProfileView(APIView):
         IsAuthenticated
     ]
 
+    def serialize_profile(
+        self,
+        profile,
+        request
+    ):
+        return (
+            StudentProfileSerializer(
+                profile,
+                context={
+                    'request': request
+                }
+            ).data
+        )
+
     # ========================================
     # GET MY PROFILE
     # ========================================
@@ -48,14 +62,11 @@ class MyProfileView(APIView):
                 )
             )
 
-            serializer = (
-                StudentProfileSerializer(
-                    profile
-                )
-            )
-
             return Response(
-                serializer.data,
+                self.serialize_profile(
+                    profile,
+                    request
+                ),
                 status=status.HTTP_200_OK
             )
         except Exception as e:
@@ -83,7 +94,11 @@ class MyProfileView(APIView):
 
                     data=request.data,
 
-                    partial=True
+                    partial=True,
+
+                    context={
+                        'request': request
+                    }
                 )
             )
 
@@ -93,9 +108,10 @@ class MyProfileView(APIView):
                 profile.update_completion()
 
                 return Response(
-                    StudentProfileSerializer(
-                        profile
-                    ).data,
+                    self.serialize_profile(
+                        profile,
+                        request
+                    ),
                     status=status.HTTP_200_OK
                 )
 
@@ -129,7 +145,11 @@ class MyProfileView(APIView):
 
                     data=request.data,
 
-                    partial=True
+                    partial=True,
+
+                    context={
+                        'request': request
+                    }
                 )
             )
 
@@ -139,9 +159,10 @@ class MyProfileView(APIView):
                 profile.update_completion()
 
                 return Response(
-                    StudentProfileSerializer(
-                        profile
-                    ).data,
+                    self.serialize_profile(
+                        profile,
+                        request
+                    ),
                     status=status.HTTP_200_OK
                 )
 

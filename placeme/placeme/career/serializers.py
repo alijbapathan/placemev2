@@ -63,11 +63,28 @@ class StudentProfileSerializer(
             if mutable.get(field) == '':
                 mutable[field] = None
 
-        resume = mutable.get('resume')
-        if resume is not None and not hasattr(resume, 'read'):
-            mutable.pop('resume', None)
+        for file_field in ('resume', 'profile_picture'):
+            value = mutable.get(file_field)
+            if value is not None and not hasattr(value, 'read'):
+                mutable.pop(file_field, None)
 
         return super().to_internal_value(mutable)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        request = self.context.get('request')
+
+        if request:
+            for file_field in ('resume', 'profile_picture'):
+                if data.get(file_field):
+                    data[file_field] = (
+                        request.build_absolute_uri(
+                            data[file_field]
+                        )
+                    )
+
+        return data
 
     class Meta:
 
