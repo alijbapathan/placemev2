@@ -1,42 +1,39 @@
 import { useEffect, useState } from 'react'
 import * as Icons from 'lucide-react'
 import { toast } from 'react-toastify'
-import { useAuthStore } from '../../context/authContext'
+
 import {
   recruiterService,
   authService,
 } from '../../services/api'
+
 export default function CompanyProfile() {
 
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] =
+    useState(true)
+
+  const [saving, setSaving] =
+    useState(false)
 
   const [companyId, setCompanyId] =
     useState(null)
 
-  const [company, setCompany] = useState({
-    name: '',
-    website: '',
-    industry: '',
-    location: '',
-    description: '',
-    logo_url: '',
-  })
+  const [user, setUser] =
+    useState(null)
 
-  const [user, setUser] = useState({})
+  const [company, setCompany] =
+    useState({
+      name: '',
+      website: '',
+      industry: '',
+      location: '',
+      description: '',
+      logo_url: '',
+    })
 
-  const token = useAuthStore(
-  (state) => state.token
-)
-
-useEffect(() => {
-
-  console.log('TOKEN =', token)
-
-  if (token) {
+  useEffect(() => {
     loadData()
-  }
-
-}, [token])
+  }, [])
 
   const loadData = async () => {
 
@@ -50,56 +47,46 @@ useEffect(() => {
         authService.getProfile(),
       ])
 
-      const companyData = companyRes.data
+      setCompanyId(
+        companyRes.data.id
+      )
 
-console.log(
-  'COMPANY DATA:',
-  companyData
-)
+      setCompany({
+        name:
+          companyRes.data.name || '',
+        website:
+          companyRes.data.website || '',
+        industry:
+          companyRes.data.industry || '',
+        location:
+          companyRes.data.location || '',
+        description:
+          companyRes.data.description || '',
+        logo_url:
+          companyRes.data.logo_url || '',
+      })
 
-setCompanyId(companyData.id)
-
-setCompany({
-  name: companyData.name || '',
-  website: companyData.website || '',
-  industry: companyData.industry || '',
-  location: companyData.location || '',
-  description: companyData.description || '',
-  logo_url: companyData.logo_url || '',
-})
-
-      setUser(userRes.data)
+      setUser(
+        userRes.data
+      )
 
     } catch (error) {
 
-  console.error(error)
+      console.error(error)
 
-  console.log(
-    'UPDATE ERROR:',
-    error.response?.data
-  )
-
-  toast.error(
-    JSON.stringify(
-      error.response?.data
-    )
-  )
-
+      toast.error(
+        'Failed to load company profile'
+      )
 
     } finally {
 
       setLoading(false)
+
     }
   }
 
   const handleChange = (e) => {
 
-
-    window.dispatchEvent(
-  new Event(
-    'companyUpdated'
-  )
-)
     setCompany({
       ...company,
       [e.target.name]:
@@ -109,33 +96,84 @@ setCompany({
 
   const handleSave = async () => {
 
+    let website =
+      company.website
+
+    if (
+      website &&
+      !website.startsWith(
+        'http://'
+      ) &&
+      !website.startsWith(
+        'https://'
+      )
+    ) {
+
+      website =
+        `https://${website}`
+    }
+
     try {
+
+      setSaving(true)
 
       await recruiterService.updateCompany(
         companyId,
-        company
+        {
+          ...company,
+          website,
+        }
       )
 
       toast.success(
-        'Company profile updated'
+        'Company profile updated successfully'
       )
+
+      await loadData()
 
     } catch (error) {
 
       console.error(error)
 
+      console.log(
+        'UPDATE ERROR =',
+        error.response?.data
+      )
+
       toast.error(
+        error.response?.data?.website?.[0] ||
         'Failed to update profile'
       )
+
+    } finally {
+
+      setSaving(false)
+
     }
   }
+
+  const initials =
+    company.name
+      ? company.name
+          .split(' ')
+          .map(
+            word => word[0]
+          )
+          .join('')
+          .slice(0, 2)
+          .toUpperCase()
+      : 'CO'
 
   if (loading) {
 
     return (
-      <div className="p-10">
-        Loading...
+
+      <div className="flex justify-center items-center h-[70vh]">
+
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+
       </div>
+
     )
   }
 
@@ -143,9 +181,9 @@ setCompany({
 
     <div className="space-y-8">
 
-      {/* Hero Section */}
+      {/* Hero */}
 
-      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 rounded-3xl p-8 text-white">
+      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 rounded-3xl p-8 text-white shadow-lg">
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
 
@@ -156,16 +194,14 @@ setCompany({
               <img
                 src={company.logo_url}
                 alt={company.name}
-                className="w-28 h-28 rounded-3xl bg-white p-2 object-cover"
+                className="w-28 h-28 rounded-3xl object-cover bg-white p-2"
               />
 
             ) : (
 
-              <div className="w-28 h-28 rounded-3xl bg-white/20 flex items-center justify-center">
+              <div className="w-28 h-28 rounded-3xl bg-white/20 flex items-center justify-center text-3xl font-bold">
 
-                <Icons.Building2
-                  size={50}
-                />
+                {initials}
 
               </div>
 
@@ -174,22 +210,34 @@ setCompany({
             <div>
 
               <h1 className="text-4xl font-bold">
-                {company.name}
+
+                {company.name || 'Company'}
+
               </h1>
 
-              <p className="mt-2 text-lg">
+              <p className="text-indigo-100 mt-2">
+
                 {company.industry}
+
               </p>
 
               <p className="text-indigo-100">
+
                 {company.location}
+
               </p>
 
-              <p className="text-indigo-100 mt-2">
-                Recruiter:
-                {' '}
-                {user.username}
-              </p>
+              <div className="mt-4 inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+
+                <Icons.User size={16} />
+
+                <span>
+                  Recruiter:
+                  {' '}
+                  {user?.username}
+                </span>
+
+              </div>
 
             </div>
 
@@ -197,9 +245,14 @@ setCompany({
 
           <button
             onClick={handleSave}
-            className="bg-white text-indigo-700 px-6 py-3 rounded-xl font-semibold"
+            disabled={saving}
+            className="bg-white text-indigo-700 px-6 py-3 rounded-xl font-semibold hover:bg-indigo-50 transition"
           >
-            Save Changes
+
+            {saving
+              ? 'Saving...'
+              : 'Save Changes'}
+
           </button>
 
         </div>
@@ -241,6 +294,7 @@ setCompany({
               name="website"
               value={company.website}
               onChange={handleChange}
+              placeholder="google.com"
               className="w-full border rounded-xl p-3"
             />
 
@@ -286,6 +340,7 @@ setCompany({
               name="logo_url"
               value={company.logo_url}
               onChange={handleChange}
+              placeholder="https://..."
               className="w-full border rounded-xl p-3"
             />
 
@@ -302,7 +357,7 @@ setCompany({
               name="description"
               value={company.description}
               onChange={handleChange}
-              className="w-full border rounded-xl p-3"
+              className="w-full border rounded-xl p-3 resize-none"
             />
 
           </div>
@@ -319,7 +374,7 @@ setCompany({
           Recruiter Information
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
 
           <div className="border rounded-2xl p-5">
 
@@ -328,7 +383,7 @@ setCompany({
             </p>
 
             <h3 className="font-semibold text-lg mt-1">
-              {user.username}
+              {user?.username}
             </h3>
 
           </div>
@@ -340,19 +395,7 @@ setCompany({
             </p>
 
             <h3 className="font-semibold text-lg mt-1">
-              {user.email}
-            </h3>
-
-          </div>
-
-          <div className="border rounded-2xl p-5">
-
-            <p className="text-slate-500">
-              Phone
-            </p>
-
-            <h3 className="font-semibold text-lg mt-1">
-              {user.phone}
+              {user?.email}
             </h3>
 
           </div>
@@ -364,7 +407,7 @@ setCompany({
             </p>
 
             <h3 className="font-semibold text-lg mt-1 capitalize">
-              {user.role}
+              {user?.role}
             </h3>
 
           </div>
@@ -374,6 +417,5 @@ setCompany({
       </div>
 
     </div>
-
   )
 }

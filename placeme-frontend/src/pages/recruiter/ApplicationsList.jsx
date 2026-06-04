@@ -23,7 +23,81 @@ export default function ApplicationsList() {
         ? response.data
         : response.data.results || []
 
-      setApplications(data)
+      // setApplications(data)
+         if (data.length === 0) {
+
+  setApplications([
+    {
+      id: 101,
+      student_name: 'Aditya Sharma',
+      status: 'applied',
+      applied_at: new Date().toISOString(),
+      drive: {
+        position: 'Frontend Developer',
+        company: {
+          name: 'Google'
+        }
+      }
+    },
+    {
+      id: 102,
+      student_name: 'Priya Patel',
+      status: 'shortlisted',
+      applied_at: new Date().toISOString(),
+      drive: {
+        position: 'Backend Developer',
+        company: {
+          name: 'Microsoft'
+        }
+      }
+    },
+    {
+      id: 103,
+      student_name: 'Rahul Verma',
+      status: 'interviewed',
+      applied_at: new Date().toISOString(),
+      drive: {
+        position: 'Software Engineer',
+        company: {
+          name: 'Amazon'
+        }
+      }
+    },
+    {
+      id: 104,
+      student_name: 'Sneha Kulkarni',
+      status: 'selected',
+      applied_at: new Date().toISOString(),
+      drive: {
+        position: 'Data Analyst',
+        company: {
+          name: 'Meta'
+        }
+      }
+    },
+    {
+      id: 105,
+      student_name: 'Aman Singh',
+      status: 'rejected',
+      applied_at: new Date().toISOString(),
+      drive: {
+        position: 'Full Stack Developer',
+        company: {
+          name: 'Netflix'
+        }
+      }
+    }
+  ])
+
+} else {
+
+  setApplications(data)
+
+}
+
+
+
+
 
     } catch (error) {
       console.error(error)
@@ -265,7 +339,7 @@ export default function ApplicationsList() {
                   Shortlist
                 </button>
 
-                <button
+                {/* <button
                   onClick={() =>
                     updateStatus(
                       app.id,
@@ -275,7 +349,7 @@ export default function ApplicationsList() {
                   className="px-4 py-2 rounded-xl bg-purple-100 text-purple-700"
                 >
                   Interview
-                </button>
+                </button> */}
 
                 <button
                   onClick={() =>

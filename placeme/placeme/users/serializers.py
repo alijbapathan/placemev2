@@ -137,16 +137,13 @@ class UserRegistrationSerializer(
         user.save()
 
         # Recruiter => create company automatically
-        if (
-            user.role == 'recruiter'
-            and company_name
-        ):
+        # Recruiter => create company automatically
+        if user.role == 'recruiter':
 
-            Company.objects.create(
-                name=company_name,
-                website=company_website,
-                recruiter=user
-            )
+         Company.objects.create(
+         name=user.username,
+         recruiter=user
+    )
 
         return user
 

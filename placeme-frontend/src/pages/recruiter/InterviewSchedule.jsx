@@ -373,7 +373,7 @@ export default function InterviewSchedule() {
 
               <div className="flex gap-3 mt-5">
 
-                <button
+                {/* <button
   onClick={() =>
     updateInterviewStatus(
       item.id,
@@ -394,7 +394,7 @@ export default function InterviewSchedule() {
   className="px-4 py-2 bg-red-100 text-red-700 rounded-xl"
 >
   Failed
-</button>
+</button> */}
 
                 <button
                   onClick={() =>

@@ -91,8 +91,10 @@ export const recruiterService = {
 
   updateApplicationStatus: (id, status) =>
   api.patch(
-    `/placement/applications/${id}/`,
-    { status }
+    `/placement/applications/${id}/update_status/`,
+    {
+      status,
+    }
   ),
 
   // Interviews
