@@ -11,3 +11,15 @@ router.register(r'attempts', TestAttemptViewSet, basename='test-attempt')
 urlpatterns = [
     path('', include(router.urls)),
 ]
+
+from . import tpo_views
+
+tpo_router = DefaultRouter()
+tpo_router.register(r'courses', tpo_views.TPOCourseViewSet, basename='tpo-course')
+tpo_router.register(r'mock-tests', tpo_views.TPOMockTestViewSet, basename='tpo-mock-test')
+tpo_router.register(r'enrollments', tpo_views.TPOEnrollmentViewSet, basename='tpo-enrollment')
+tpo_router.register(r'attempts', tpo_views.TPOTestAttemptViewSet, basename='tpo-attempt')
+
+urlpatterns += [
+    path('tpo/', include(tpo_router.urls)),
+]

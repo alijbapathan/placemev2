@@ -34,13 +34,23 @@ export default function TPONavbar() {
 
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="ml-4 text-sm text-red-600 hover:underline"
-          aria-label="Logout"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/tpo/profile')}
+            className="text-sm text-slate-700 hover:underline"
+            aria-label="Profile"
+          >
+            Profile
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="ml-4 text-sm text-red-600 hover:underline"
+            aria-label="Logout"
+          >
+            Logout
+          </button>
+        </div>
 
       </div>
     </div>
