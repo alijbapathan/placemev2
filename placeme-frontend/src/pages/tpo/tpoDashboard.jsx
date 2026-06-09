@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../../context/authContext'
 import * as Icons from 'lucide-react'
 
 import { StatCard } from '../../components/StatCard'
@@ -9,6 +10,8 @@ import { tpoApi } from '../../services/tpoApi'
 
 const TPODashboard = () => {
   const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
+  const companyName = user?.company?.name || user?.company_name || null
 
   const [stats, setStats] = useState({
   companies: 0,
@@ -92,7 +95,7 @@ setStats({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-slate-900">
-            TPO Dashboard
+            {companyName ? `${companyName} Dashboard` : 'TPO Dashboard'}
           </h1>
 
           <p className="text-slate-500 mt-2">

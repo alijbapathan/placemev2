@@ -50,7 +50,7 @@ const EditMockTest = () => {
 
 		try {
 			await tpoApi.updateMockTest(id, formData)
-			navigate('/tpo/tests')
+			navigate('/tpo/mock-tests')
 		} catch (err) {
 			console.log(err)
 			alert('Failed to update mock test')
@@ -147,7 +147,7 @@ const EditMockTest = () => {
 
 						<button
 							type="button"
-							onClick={() => navigate('/tpo/tests')}
+							onClick={() => navigate('/tpo/mock-tests')}
 							className="border px-5 py-3 rounded-lg"
 						>
 							Cancel

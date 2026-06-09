@@ -3,7 +3,7 @@ export const TPO_SIDEBAR_ITEMS = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: 'LayoutDashboard',
-    path: '/tpo/dashboard'
+    path: '/tpo'
   },
   {
     id: 'companies',

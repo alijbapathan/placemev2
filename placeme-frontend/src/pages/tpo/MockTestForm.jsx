@@ -69,7 +69,7 @@ const MockTestForm = () => {
         await tpoApi.createMockTest(formData)
       }
 
-      navigate('/tpo/tests')
+      navigate('/tpo/mock-tests')
     } catch (err) {
       console.log('ERROR:', err.response?.data || err)
       alert('Failed to save mock test')
@@ -216,7 +216,7 @@ const MockTestForm = () => {
 
           <button
             type="button"
-            onClick={() => navigate('/tpo/tests')}
+            onClick={() => navigate('/tpo/mock-tests')}
             className="border px-5 py-3 rounded-lg"
           >
             Cancel

@@ -16,7 +16,7 @@ export default function TPONavbar() {
     <div className="fixed top-0 left-72 right-0 h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8">
 
       <div>
-        <h2 className="text-xl font-semibold">Training & Placement Officer</h2>
+        <h2 className="text-xl font-semibold">{user?.company?.name || user?.company_name || 'Placement and Training Management Portal'}</h2>
       </div>
 
       <div className="flex items-center gap-5">

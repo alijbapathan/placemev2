@@ -42,7 +42,7 @@ const Home = () => {
         <div className="mb-8">
           <span className="inline-flex items-center space-x-2 bg-blue-100 text-blue-900 px-4 py-2 rounded-full text-sm font-medium">
             <SparklesIcon className="w-4 h-4" />
-            <span>Smart Training & Placement Portal</span>
+            <span>Smart Placement & Training Management Portal</span>
           </span>
         </div>
 
@@ -136,7 +136,7 @@ const Home = () => {
       <footer className="bg-gray-900 text-gray-400 py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p>&copy; 2026 PlaceMe. All rights reserved.</p>
-          <p className="mt-2 text-sm">Smart Training & Placement Portal for Colleges</p>
+          <p className="mt-2 text-sm">Smart Placement & Training Management Portal for Colleges</p>
         </div>
       </footer>
     </div>

@@ -9,7 +9,7 @@ export default function TPOSidebar() {
   {
     name: 'Dashboard',
     icon: Icons.LayoutDashboard,
-    path: '/tpo/dashboard',
+    path: '/tpo',
   },
   {
     name: 'Companies',
@@ -53,7 +53,7 @@ export default function TPOSidebar() {
           </h1>
 
           <p className="text-sm text-slate-500">
-            TPO Portal
+            PTM Portal
           </p>
         </div>
       </div>
