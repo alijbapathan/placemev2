@@ -194,15 +194,19 @@ function App() {
 />
 
 {/* 404 */}
+{/* 404 */}
+{/* 404 */}
 <Route path="*" element={<NotFound />} />
+</Routes>
 
-      <ToastContainer
-        position="bottom-right"
-        autoClose={3000}
-        theme="dark"
-      />
-    </Router>
-  )
+<ToastContainer
+  position="bottom-right"
+  autoClose={3000}
+  theme="dark"
+/>
+</div>
+</Router>
+)
 }
 
 export default App
