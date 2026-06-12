@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { tpoApi } from '../../services/tpoApi'
+import { tpoApi } from '../../services/tpoapi'
 
 const TpoEnrollments = () => {
 	const [enrollments, setEnrollments] = useState([])

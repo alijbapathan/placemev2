@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { tpoApi } from '../../services/tpoApi'
+import { tpoApi } from '../../services/tpoapi'
 
 const CourseForm = () => {
   const navigate = useNavigate()

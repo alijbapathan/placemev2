@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { tpoApi } from '../../services/tpoApi'
+import { tpoApi } from '../../services/tpoapi'
 
 const CompanyForm = () => {
   const navigate = useNavigate()

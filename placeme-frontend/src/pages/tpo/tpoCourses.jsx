@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Icons from 'lucide-react'
-import { tpoApi } from '../../services/tpoApi'
+import { tpoApi } from '../../services/tpoapi'
 
 const TPOCourses = () => {
   const navigate = useNavigate()

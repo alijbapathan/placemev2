@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import * as Icons from 'lucide-react'
-import { tpoApi } from '../../services/tpoApi'
+import { tpoApi } from '../../services/tpoapi'
 import { useNavigate } from 'react-router-dom'
 
 const TPOApplications = () => {
