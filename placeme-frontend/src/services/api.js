@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../context/authContext'
 
-const API_URL = 'http://localhost:8000/api'
-
+const API_URL = 'https://placeme-backend-q48e.onrender.com/api'
 const api = axios.create({
   baseURL: API_URL,
   headers: {
